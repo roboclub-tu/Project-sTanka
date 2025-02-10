@@ -40,17 +40,6 @@ void setup() {
   lcd.init();
   lcd.backlight();
 
-                                            // Connect to Wi-Fi
-//  WiFi.begin(ssid, password);
-//  while (WiFi.status() != WL_CONNECTED) {
-//    delay(1000);
-//    Serial.println("Connecting to WiFi...");
-//  }
-//  Serial.println("Connected to WiFi");
-//  
-//  // Print the ESP32 IP address
-//  Serial.print("ESP32 IP address: ");
-//  Serial.println(WiFi.localIP());
   /* Set ESP32 to WiFi Station mode */
   WiFi.mode(WIFI_AP_STA);
   /* start SmartConfig */
