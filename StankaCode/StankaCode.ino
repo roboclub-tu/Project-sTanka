@@ -1,9 +1,13 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd (0x27,16,2);
 
-const char* ssid = "RoboClub";         // Replace with your Wi-Fi SSID
-const char* password = "roboclub9405"; // Replace with your Wi-Fi password
+//const char* ssid = "RoboClub";         // Replace with your Wi-Fi SSID
+//const char* password = "roboclub9405"; // Replace with your Wi-Fi password
+//const char* ssid = "RoboClub";         
+//const char* password = "roboclub9405";
 
 WiFiUDP udp;                            // UDP instance
 unsigned int localUdpPort = 10000;       // The same port number as in your Python code
@@ -33,18 +37,45 @@ void setup() {
   pinMode(led1, OUTPUT);
   pinMode(led2, OUTPUT);
   Serial.begin(115200);
+  lcd.init();
+  lcd.backlight();
 
-  // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
+                                            // Connect to Wi-Fi
+//  WiFi.begin(ssid, password);
+//  while (WiFi.status() != WL_CONNECTED) {
+//    delay(1000);
+//    Serial.println("Connecting to WiFi...");
+//  }
+//  Serial.println("Connected to WiFi");
+//  
+//  // Print the ESP32 IP address
+//  Serial.print("ESP32 IP address: ");
+//  Serial.println(WiFi.localIP());
+  /* Set ESP32 to WiFi Station mode */
+  WiFi.mode(WIFI_AP_STA);
+  /* start SmartConfig */
+  WiFi.beginSmartConfig();
+
+  /* Wait for SmartConfig packet from mobile */
+  Serial.println("Waiting for SmartConfig.");
+  while (!WiFi.smartConfigDone()) {
+    delay(500);
+    Serial.print(".");
   }
-  Serial.println("Connected to WiFi");
-  
-  // Print the ESP32 IP address
-  Serial.print("ESP32 IP address: ");
+  Serial.println("");
+  Serial.println("SmartConfig done.");
+
+  /* Wait for WiFi to connect to AP */
+  Serial.println("Waiting for WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("WiFi Connected.");
+  Serial.print("IP Address: ");
   Serial.println(WiFi.localIP());
+  lcd.setCursor(0,0);
+  lcd.print(WiFi.localIP());
 
   // Start the UDP listener on the specified port
   udp.begin(localUdpPort);
@@ -93,46 +124,24 @@ void loop() {
           }
         }
        if(gesture.equals("Open")){
-        if(digitalRead(detFront) == 1){
+        if(digitalRead(detFront) == 1 || digitalRead(detRight) == 1 || digitalRead(detLeft) == 1){
           goForward(750);
         }
       }
       if(gesture.equals("OK")){
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2,LOW);
-        delay(150);
-        digitalWrite(led2,HIGH);
+        for(int i = 0; i < 10; i++){
+          if( i%2 == 0){
+            digitalWrite(led1, HIGH);
+            digitalWrite(led2,LOW);
+            delay(150);
+          }else{
+            digitalWrite(led1, LOW);
+            digitalWrite(led2,HIGH);
+            delay(150);
+          }
+        }
         digitalWrite(led1,LOW);
-        delay(150);
-        digitalWrite(led1, HIGH);
         digitalWrite(led2,LOW);
-        delay(150);
-        digitalWrite(led2,HIGH);
-        digitalWrite(led1,LOW);
-        delay(150);
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2,LOW);
-        delay(150);
-        digitalWrite(led2,HIGH);
-        digitalWrite(led1,LOW);
-        delay(150);
-         digitalWrite(led1, HIGH);
-        digitalWrite(led2,LOW);
-        delay(150);
-        digitalWrite(led2,HIGH);
-        digitalWrite(led1,LOW);
-        delay(150);
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2,LOW);
-        delay(150);
-        digitalWrite(led2,HIGH);
-        digitalWrite(led1,LOW);
-        delay(150);
-        digitalWrite(led1, HIGH);
-        digitalWrite(led2,LOW);
-        delay(150);
-        digitalWrite(led2,LOW);
-        digitalWrite(led1,LOW);
         delay(150);
         
         turnLeft(300);
