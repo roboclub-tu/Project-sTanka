@@ -4,28 +4,32 @@
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd (0x27,16,2);
 
-//const char* ssid = "RoboClub";         // Replace with your Wi-Fi SSID
-//const char* password = "roboclub9405"; // Replace with your Wi-Fi password
+//const char* ssid = "RoboClub";         /* Replace with your Wi-Fi SSID */
+//const char* password = "roboclub9405"; /* Replace with your Wi-Fi password */
 //const char* ssid = "RoboClub";         
 //const char* password = "roboclub9405";
 
-WiFiUDP udp;                            // UDP instance
-unsigned int localUdpPort = 10000;       // The same port number as in your Python code
-char incomingPacket[255];   // Buffer for incoming packets
+WiFiUDP udp;                            /* UDP instance */
+unsigned int localUdpPort = 10000;       /* The same port number as in your Python code */
+char incomingPacket[255];   /* Buffer for incoming packets */
 
-int detFront = 35;
-int detLeft = 34;
-int detRight = 14;
-int detBack = 27;
-int in_1 = 33;//napred dqsna veriga
-int in_2 = 32;//nazad
-int in_3 = 26;//napred lqva veriga
-int in_4 = 25;//nazad
-int led1 = 2;
-int led2 = 4;
-
+int detFront = 35; /*pin za sensor*/
+int detLeft = 34; /*pin za sensor*/
+int detRight = 14; /*pin za sensor*/
+int detBack = 27; /*pin za sensor*/
+int in_1 = 33;/*napred dqsna veriga*/
+int in_2 = 32;/*nazad*/
+int in_3 = 26;/*napred lqva veriga*/
+int in_4 = 25;/*nazad*/
+int led1 = 2; /*pin za predeno LED*/
+int led2 = 4; /*pin za predeno LED*/
+int in_pwmA = 19; /* pwm za motorit A*/
+int in_pwmB = 18; /* pwm za motirt B*/
+int stby = 5;
 
 void setup() {
+
+  
   pinMode(detFront, INPUT);
   pinMode(detLeft, INPUT);
   pinMode(detRight, INPUT);
@@ -36,6 +40,9 @@ void setup() {
   pinMode(in_4, OUTPUT);  
   pinMode(led1, OUTPUT);
   pinMode(led2, OUTPUT);
+  pinMode(in_pwmA, OUTPUT);
+  pinMode(in_pwmB, OUTPUT);
+  pinMode(stby, OUTPUT);
   Serial.begin(115200);
   lcd.init();
   lcd.backlight();
@@ -76,6 +83,7 @@ void loop() {
   int packetSize = udp.parsePacket();
   if (packetSize) {
     // Receive the incoming UDP packet
+    // expected 
     int len = udp.read(incomingPacket, 255);
     if (len > 0) {
       incomingPacket[len] = 0;  // Null-terminate the string
@@ -95,30 +103,105 @@ void loop() {
     }
 
     // Extract values from the JSON
-//    int x = doc["x"];  // Get the 'x' value
-//    int y = doc["y"];  // Get the 'y' value
     String gesture = doc["gesture"];// Get the 'gesture' string value
     
 
     // Print the extracted values to the Serial Monitor
     Serial.printf("gesture: %s\n",gesture);
-//&& digitalRead(detLeft) == 0 && digitalRead(detRight) == 0 && digitalRead(detBack) == 0
-      if(gesture.equals("Counter Clockwise")){  
-          if(digitalRead(detLeft) == 1){       
+    
+      if(gesture.equals("Counter Clockwise")){         
             turnLeft(300);
-          }
         }else if(gesture.equals("Clockwise")){
-          if( digitalRead(detRight) == 1){
             turnRight(300);
-          }
         }
        if(gesture.equals("Open")){
-        if(digitalRead(detFront) == 1 || digitalRead(detRight) == 1 || digitalRead(detLeft) == 1){
-          goForward(750);
-        }
+             goForward(750);
       }
       if(gesture.equals("OK")){
-        for(int i = 0; i < 10; i++){
+        danceBaby();
+      }
+      if(gesture.equals("Close")){
+        goBackward(750);
+      }
+  }
+}
+
+void goForward (int amount){
+  lcd.setCursor(0,0);
+  lcd.print("Going forward!");
+  Serial.printf("FORWARD\n");
+  digitalWrite(stby, HIGH);
+  analogWrite(in_pwmA, 280);
+  digitalWrite(in_pwmB, HIGH);
+  digitalWrite(in_1, HIGH);
+  digitalWrite(in_4, HIGH);
+  delay(amount);
+  digitalWrite(in_pwmA, LOW);
+  digitalWrite(in_pwmB, LOW);
+  digitalWrite(in_1, LOW);
+  digitalWrite(in_4, LOW);
+  lcd.setCursor(0,0);
+  lcd.print(WiFi.localIP());
+}
+
+void goBackward (int amount){
+  lcd.setCursor(0,0);
+  lcd.print("Going backwards!");
+  analogWrite(in_pwmA, 220);
+  digitalWrite(in_pwmB, HIGH);
+  digitalWrite(stby, HIGH);
+  digitalWrite(in_2, HIGH);
+  digitalWrite(in_3, HIGH);
+  delay(amount);
+  digitalWrite(in_pwmA, LOW);
+  digitalWrite(in_pwmB, LOW);
+  digitalWrite(in_2, LOW);
+  digitalWrite(in_3, LOW);
+  lcd.setCursor(0,0);
+  lcd.print("                ");
+  lcd.print(WiFi.localIP());
+}
+
+void turnLeft (int amount){ // 1250 za 90 gradusa
+  lcd.setCursor(0,0);
+  lcd.print("Turning left!");
+  digitalWrite(in_pwmA, HIGH);
+  digitalWrite(in_pwmB, HIGH);
+  digitalWrite(stby, HIGH);
+  digitalWrite(in_1, HIGH);
+  digitalWrite(in_3, HIGH);
+  delay(amount);
+  digitalWrite(in_pwmA, LOW);
+  digitalWrite(in_pwmB, LOW);
+  digitalWrite(in_1, LOW);
+  digitalWrite(in_3, LOW);
+  lcd.setCursor(0,0);
+  lcd.print("                      ");
+  lcd.print(WiFi.localIP());
+}
+
+void turnRight (int amount){
+  lcd.setCursor(0,0);
+  lcd.print("Turning right!");
+  digitalWrite(in_pwmA, HIGH);
+  digitalWrite(in_pwmB, HIGH);
+  digitalWrite(stby, HIGH);
+  digitalWrite(in_2, HIGH);
+  digitalWrite(in_4, HIGH);
+  delay(amount);
+  digitalWrite(in_pwmA, LOW);
+  digitalWrite(in_pwmB, LOW);
+  digitalWrite(in_2, LOW);
+  digitalWrite(in_4, LOW);
+  lcd.setCursor(0,0);
+  lcd.print("                      ");
+  lcd.print(WiFi.localIP());
+}
+
+void danceBaby(){
+  lcd.setCursor(0,0);
+  lcd.print("Dancing!");
+  for(int i = 0; i < 10; i++){
           if( i%2 == 0){
             digitalWrite(led1, HIGH);
             digitalWrite(led2,LOW);
@@ -137,47 +220,6 @@ void loop() {
         delay(150);
         turnRight(300);
         delay(100);
-      }
-      if(gesture.equals("Close")){
-        if(digitalRead(detBack) == 1){
-        goBackward(750);
-        }
-      }
-//   }
-  }
-    
-  
-  
-}
-
-void goForward (int amount){
-  digitalWrite(in_1, HIGH);
-  digitalWrite(in_3, HIGH);
-  delay(amount);
-  digitalWrite(in_1, LOW);
-  digitalWrite(in_3, LOW);
-}
-
-void goBackward (int amount){
-  digitalWrite(in_2, HIGH);
-  digitalWrite(in_4, HIGH);
-  delay(amount);
-  digitalWrite(in_2, LOW);
-  digitalWrite(in_4, LOW);
-}
-
-void turnLeft (int amount){ // 1250 za 90 gradusa
-  digitalWrite(in_1, HIGH);
-  digitalWrite(in_4, HIGH);
-  delay(amount);
-  digitalWrite(in_1, LOW);
-  digitalWrite(in_4, LOW);
-}
-
-void turnRight (int amount){
-  digitalWrite(in_2, HIGH);
-  digitalWrite(in_3, HIGH);
-  delay(amount);
-  digitalWrite(in_2, LOW);
-  digitalWrite(in_3, LOW);
+        lcd.setCursor(0,0);
+        lcd.print(WiFi.localIP());
 }
